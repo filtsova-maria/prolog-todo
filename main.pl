@@ -11,6 +11,7 @@
 :- http_handler(root(.), main_page, []).
 :- http_handler(root(add_task), add_task_handler, [method(post)]).
 :- http_handler(root(delete_task), delete_task_handler, [method(post)]).
+:- http_handler(root(edit_task), edit_task_handler, [method(post)]).
 
 % Static files
 http:location(static, '/static', []).
@@ -21,13 +22,14 @@ app_name('Prolog TODO 📝').
 main_page(_Request) :-
     app_name(Title),
     findall([ID, Description], task(ID, Description), Tasks),
+    sort(Tasks, SortedTasks), % Ensures tasks are sorted by ID and not by DB order
     reply_html_page(
         % HTML head
         [title(Title), link([rel='icon', type='image/png', href='/static/favicon.png'])],
         % HTML body
         [
             \html_requires('/static/style.css'),
-            \page_content(Title, Tasks)
+            \page_content(Title, SortedTasks)
         ]
     ).
     
@@ -54,8 +56,12 @@ print_tasks([[TaskId, Description]|Rest]) -->
     html(li([class='task'], [
         form([action='/delete_task', method='post'], [
             input([type='submit', class='delete-btn', value='x']),
-            Description,
             input([type='hidden', name='task_id', value=TaskId])
+        ]),
+        form([action='/edit_task', method='post'], [
+            input([type='text', name='new_description', class='edit-input', value=Description]),
+            input([type='hidden', name='task_id', value=TaskId]),
+            input([type='submit', value='Edit', class='edit-btn'])
         ])
     ])),
     print_tasks(Rest).
@@ -70,6 +76,12 @@ add_task_handler(Request) :-
 delete_task_handler(Request) :-
     http_parameters(Request, [task_id(TaskID, [integer])]),
     retract(task(TaskID, _)),
+    http_redirect(see_other, root(.), _).
+
+edit_task_handler(Request) :-
+    http_parameters(Request, [task_id(TaskID, [integer]), new_description(NewDescription, [atom])]),
+    retract(task(TaskID, _)),
+    assertz(task(TaskID, NewDescription)),
     http_redirect(see_other, root(.), _).
 
 % Utilities
