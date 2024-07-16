@@ -74,19 +74,21 @@ add_task_handler(Request) :-
     http_parameters(Request, [task(Description, [atom])]),
     generate_task_id(NewId), 
     assertz(task(NewId, Description)),
-    save_tasks('tasks.db'),
-    http_redirect(see_other, root(.), _).
+    request_postprocessing().
 
 delete_task_handler(Request) :-
     http_parameters(Request, [task_id(TaskID, [integer])]),
     retract(task(TaskID, _)),
-    save_tasks('tasks.db'),
-    http_redirect(see_other, root(.), _).
+    request_postprocessing().
 
 edit_task_handler(Request) :-
     http_parameters(Request, [task_id(TaskID, [integer]), new_description(NewDescription, [atom])]),
     retract(task(TaskID, _)),
     assertz(task(TaskID, NewDescription)),
+    request_postprocessing().
+
+% Updates database and redirects to main page
+request_postprocessing() :-
     save_tasks('tasks.db'),
     http_redirect(see_other, root(.), _).
 
@@ -114,4 +116,4 @@ load_tasks(FileName) :-
 server(Port) :-
     load_tasks('tasks.db'),
     http_server(http_dispatch, [port(Port)]).
-% :- initialization(server(8000)).
+:- initialization(server(8000)).
