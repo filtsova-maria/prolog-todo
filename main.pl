@@ -45,10 +45,13 @@ page_content(Title, Tasks) -->
                 ]),
             h3('Tasks'),
             div([ id='task-list' ],
-                [ ul(\print_tasks(Tasks)) ]
+                [ ul(\print_tasks_helper(Tasks)) ]
             )
         ]
     ).
+
+print_tasks_helper([]) --> !, html(li('No tasks to display.')).
+print_tasks_helper(Tasks) --> print_tasks(Tasks).
 
 % DCG to print tasks in HTML
 print_tasks([]) --> [].
@@ -111,4 +114,4 @@ load_tasks(FileName) :-
 server(Port) :-
     load_tasks('tasks.db'),
     http_server(http_dispatch, [port(Port)]).
-:- initialization(server(8000)).
+% :- initialization(server(8000)).
