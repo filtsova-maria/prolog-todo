@@ -71,17 +71,20 @@ add_task_handler(Request) :-
     http_parameters(Request, [task(Description, [atom])]),
     generate_task_id(NewId), 
     assertz(task(NewId, Description)),
+    save_tasks('tasks.db'),
     http_redirect(see_other, root(.), _).
 
 delete_task_handler(Request) :-
     http_parameters(Request, [task_id(TaskID, [integer])]),
     retract(task(TaskID, _)),
+    save_tasks('tasks.db'),
     http_redirect(see_other, root(.), _).
 
 edit_task_handler(Request) :-
     http_parameters(Request, [task_id(TaskID, [integer]), new_description(NewDescription, [atom])]),
     retract(task(TaskID, _)),
     assertz(task(TaskID, NewDescription)),
+    save_tasks('tasks.db'),
     http_redirect(see_other, root(.), _).
 
 % Utilities
@@ -95,11 +98,17 @@ generate_task_id(NewId) :-
             NewId = 1
     ).
 
+save_tasks(FileName) :-
+    tell(FileName),
+    listing(task),
+    told.
+
+load_tasks(FileName) :-
+    exists_file(FileName),
+    consult(FileName).
+
 % Start server on port 8000
 server(Port) :-
+    load_tasks('tasks.db'),
     http_server(http_dispatch, [port(Port)]).
 :- initialization(server(8000)).
-
-% TODO: add task IDs
-% TODO: edit and delete tasks
-% TODO: csv storage
