@@ -1,10 +1,11 @@
+
 # prolog-todo
 
-- Webová aplikace Todo-list v SWI-Prolog
-- Používá vestavěnou HTTP knihovnu
+- Web application Todo-list in SWI-Prolog
+- Uses built-in HTTP library
 
-- Server posílá generovanou HTML stránku, která obsahuje vstupní pole na zadávání textu, tlačítko na přidávání nových položek a seznam již existujících položek s tlačítky na upravování a mazání.
+- The server sends a generated HTML page that includes an input field for entering text, a button for adding new items, and a list of existing items with buttons for editing and deleting.
 
-- Server podporuje dotazy pro tvoření, upravování a mazání položek.
+- The server supports queries for creating, editing, and deleting items.
 
-- Položky se ukládají jako predikáty lokálně do souboru `tasks.db`.
+- Items are stored locally as predicates in the `tasks.db` file.
