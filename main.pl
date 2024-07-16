@@ -9,7 +9,8 @@
 
 % Routes
 :- http_handler(root(.), main_page, []).
-:- http_handler(root(tasks), add_task_handler, [method(post)]).
+:- http_handler(root(add_task), add_task_handler, [method(post)]).
+:- http_handler(root(delete_task), delete_task_handler, [method(post)]).
 
 % Static files
 http:location(static, '/static', []).
@@ -19,10 +20,10 @@ app_name('Prolog TODO 📝').
 
 main_page(_Request) :-
     app_name(Title),
-    findall(Task, task(_, Task), Tasks),
+    findall([ID, Description], task(ID, Description), Tasks),
     reply_html_page(
         % HTML head
-        [title(Title)],
+        [title(Title), link([rel='icon', type='image/png', href='/static/favicon.png'])],
         % HTML body
         [
             \html_requires('/static/style.css'),
@@ -34,10 +35,11 @@ page_content(Title, Tasks) -->
     html(
         [
             h2(Title),
-            form([ action='/tasks', method='post' ],
-                [ label([ for='task' ], 'Task: '),
+            form([ action='/add_task', method='post', id='add-task-form' ],
+                [
+                    label([ for='task' ], 'Task'),
                     input([ type='text', id='task-input', name='task', required ]),
-                    input([ type='submit', value='Add' ])
+                    input([ type='submit', id='add-btn', value='Add' ])
                 ]),
             h3('Tasks'),
             div([ id='task-list' ],
@@ -48,18 +50,29 @@ page_content(Title, Tasks) -->
 
 % DCG to print tasks in HTML
 print_tasks([]) --> [].
-print_tasks([Task|Rest]) -->
-    html(li(Task)),
+print_tasks([[TaskId, Description]|Rest]) -->
+    html(li([class='task'], [
+        form([action='/delete_task', method='post'], [
+            input([type='submit', class='delete-btn', value='x']),
+            Description,
+            input([type='hidden', name='task_id', value=TaskId])
+        ])
+    ])),
     print_tasks(Rest).
 
-% Handler for creating tasks
+% Handlers for creating and deleting tasks
 add_task_handler(Request) :-
     http_parameters(Request, [task(Description, [atom])]),
     generate_task_id(NewId), 
     assertz(task(NewId, Description)),
-    main_page(Request),
     http_redirect(see_other, root(.), _).
 
+delete_task_handler(Request) :-
+    http_parameters(Request, [task_id(TaskID, [integer])]),
+    retract(task(TaskID, _)),
+    http_redirect(see_other, root(.), _).
+
+% Utilities
 generate_task_id(NewId) :-
     (findall(Id, task(Id, _), Ids),
         % Increment the ID
