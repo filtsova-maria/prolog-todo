@@ -12,6 +12,7 @@
 :- http_handler(root(tasks), add_task_handler, [method(post)]).
 
 % Static files
+http:location(static, '/static', []).
 :- http_handler(static(.), http_reply_from_files(static, []), [prefix]).
 
 app_name('Prolog TODO 📝').
