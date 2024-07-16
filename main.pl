@@ -109,8 +109,14 @@ save_tasks(FileName) :-
     told.
 
 load_tasks(FileName) :-
-    exists_file(FileName),
-    consult(FileName).
+    (
+        exists_file(FileName) ->
+            consult(FileName)
+        ;
+            tell(FileName),
+            told,
+            consult(FileName)
+    ).
 
 % Start server on port 8000
 server(Port) :-
